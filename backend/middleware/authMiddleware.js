@@ -3,31 +3,30 @@ const User = require("../models/userModel.js");
 const asyncHandler = require("express-async-handler");
 
 const protect = asyncHandler(async (req, res, next) => {
-  let token;
+  const header = req.headers.authorization;
 
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
-    try {
-      token = req.headers.authorization.split(" ")[1];
-
-      //decodes token id
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-      req.user = await User.findById(decoded.id).select("-password");
-
-      next();
-    } catch (error) {
-      res.status(401);
-      throw new Error("Not authorized, token failed");
-    }
-  }
-
-  if (!token) {
+  if (!header || !header.startsWith("Bearer ")) {
     res.status(401);
     throw new Error("Not authorized, no token");
   }
+
+  let decoded;
+  try {
+    decoded = jwt.verify(header.split(" ")[1], process.env.JWT_SECRET);
+  } catch (error) {
+    res.status(401);
+    throw new Error("Not authorized, token failed");
+  }
+
+  req.user = await User.findById(decoded.id).select("-password");
+
+  // The token is valid but the account no longer exists
+  if (!req.user) {
+    res.status(401);
+    throw new Error("Not authorized, user not found");
+  }
+
+  next();
 });
 
 module.exports = { protect };

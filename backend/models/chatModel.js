@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const chatModel = mongoose.Schema(
   {
-    chatName: { type: String, trim: true },
+    chatName: { type: String, trim: true, maxlength: 60 },
     isGroupChat: { type: Boolean, default: false },
     users: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     latestMessage: {
@@ -13,6 +13,8 @@ const chatModel = mongoose.Schema(
   },
   { timestamps: true }
 );
+
+chatModel.index({ users: 1, updatedAt: -1 });
 
 const Chat = mongoose.model("Chat", chatModel);
 

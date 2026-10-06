@@ -1,24 +1,24 @@
-import { Box } from "@chakra-ui/layout";
-import { useState } from "react";
-import Chatbox from "../components/Chatbox";
-import MyChats from "../components/MyChats";
-import SideDrawer from "../components/miscellaneous/SideDrawer";
+import { Flex } from "@chakra-ui/react";
+import ChatWindow from "../components/ChatWindow";
+import Sidebar from "../components/Sidebar";
 import { ChatState } from "../Context/ChatProvider";
+import { useUi } from "../theme";
 
 const Chatpage = () => {
-  const [fetchAgain, setFetchAgain] = useState(false);
-  const { user } = ChatState();
+  const ui = useUi();
+  const { selectedChat } = ChatState();
 
+  // On small screens only one of the two panes is shown at a time
   return (
-    <div style={{ width: "100%" }}>
-      {user && <SideDrawer />}
-      <Box d="flex" justifyContent="space-between" w="100%" h="91.5vh" p="10px">
-        {user && <MyChats fetchAgain={fetchAgain} />}
-        {user && (
-          <Chatbox fetchAgain={fetchAgain} setFetchAgain={setFetchAgain} />
-        )}
-      </Box>
-    </div>
+    <Flex className="app-shell" w="100%" bg={ui.appBg} p={{ base: 0, md: 3 }}>
+      <Sidebar
+        d={{ base: selectedChat ? "none" : "flex", md: "flex" }}
+        w={{ base: "100%", md: "340px", xl: "380px" }}
+        flexShrink={0}
+        mr={{ base: 0, md: 3 }}
+      />
+      <ChatWindow d={{ base: selectedChat ? "flex" : "none", md: "flex" }} flex="1" />
+    </Flex>
   );
 };
 

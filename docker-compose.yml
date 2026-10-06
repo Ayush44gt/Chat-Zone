@@ -1,0 +1,14 @@
+# Local MongoDB for development: docker compose up -d
+services:
+  mongo:
+    image: mongo:6
+    container_name: chatzone-mongo
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - chatzone-mongo-data:/data/db
+
+volumes:
+  chatzone-mongo-data:
+    external: true

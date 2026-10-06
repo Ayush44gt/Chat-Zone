@@ -75,7 +75,7 @@ export const SearchInput = ({ value, onChange, placeholder, inputRef, ...rest })
   );
 };
 
-export const UserRow = ({ user, onClick, right, isDisabled }) => {
+export const UserRow = ({ user, label, onClick, right, isDisabled }) => {
   const ui = useUi();
   const { isOnline } = ChatState();
   const interactive = Boolean(onClick) && !isDisabled;
@@ -101,7 +101,7 @@ export const UserRow = ({ user, onClick, right, isDisabled }) => {
       <UserAvatar user={user} online={isOnline(user._id)} size="sm" boxSize="38px" />
       <Box ml={3} minW={0} flex="1">
         <Text fontWeight="600" fontSize="sm" isTruncated>
-          {user.name}
+          {label || user.name}
         </Text>
         <Text fontSize="xs" color={ui.muted} isTruncated>
           {user.email}

@@ -225,6 +225,7 @@ function Homepage() {
               fontSize="md"
               variant="outline"
               colorScheme="gray"
+              bg={ui.surface}
               borderColor={ui.border}
               onClick={loginAsGuest}
               isLoading={guestLoading}

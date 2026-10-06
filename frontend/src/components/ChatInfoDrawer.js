@@ -152,7 +152,7 @@ const AddMembers = ({ chat, onBack, run, busy }) => {
 
 const GroupInfo = ({ chat, onClose }) => {
   const ui = useUi();
-  const { user, upsertChat, removeChat } = ChatState();
+  const { user, upsertChat, removeChat, expectRemoval } = ChatState();
   const toast = useToast();
   const [renaming, setRenaming] = useState(false);
   const [name, setName] = useState(chat.chatName);
@@ -214,6 +214,7 @@ const GroupInfo = ({ chat, onClose }) => {
         api.put("/chat/groupremove", { chatId: chat._id, userId: action.person._id })
       );
     } else if (action.type === "leave") {
+      expectRemoval(chat._id);
       setBusy("confirm");
       try {
         await api.put("/chat/groupremove", { chatId: chat._id, userId: user._id });
@@ -223,6 +224,7 @@ const GroupInfo = ({ chat, onClose }) => {
       }
       setBusy("");
     } else if (action.type === "delete") {
+      expectRemoval(chat._id);
       setBusy("confirm");
       try {
         await api.delete(`/chat/group/${chat._id}`);
@@ -324,7 +326,8 @@ const GroupInfo = ({ chat, onClose }) => {
         {members.map((person) => (
           <UserRow
             key={person._id}
-            user={person._id === user._id ? { ...person, name: `${person.name} (you)` } : person}
+            user={person}
+            label={person._id === user._id ? `${person.name} (you)` : undefined}
             right={
               <Flex align="center" flexShrink={0} ml={2}>
                 {person._id === adminId && (

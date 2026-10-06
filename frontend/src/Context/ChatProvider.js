@@ -49,11 +49,19 @@ const ChatProvider = ({ children }) => {
   const [connected, setConnected] = useState(false);
 
   const toast = useToast();
+  // Read through a ref so callbacks don't change (and reconnect the socket) with it
+  const toastRef = useRef(toast);
+  toastRef.current = toast;
   const selectedRef = useRef(null);
   const typingTimers = useRef({});
   // The message box, so dialogs can hand focus to it when they close
   const composerRef = useRef(null);
+  const chatsRef = useRef([]);
+  // Chats this client is leaving or deleting itself, so no notice is needed
+  const expectedRemovals = useRef(new Set());
   selectedRef.current = selectedChatId;
+
+  chatsRef.current = chats;
 
   const userId = user && user._id;
   const token = user && user.token;
@@ -74,6 +82,7 @@ const ChatProvider = ({ children }) => {
     setLastSeen({});
     setTyping({});
     setChatsError("");
+    toastRef.current.closeAll();
   }, []);
 
   // Profile edits return a fresh user object (and token)
@@ -234,6 +243,10 @@ const ChatProvider = ({ children }) => {
     });
 
     client.on("message:deleted", ({ chatId, messageId }) => {
+      // The deleted message may have been one of the unread ones
+      const affected = chatsRef.current.find((c) => c._id === chatId);
+      if (affected && affected.unreadCount > 0) fetchChats({ silent: true });
+
       setChats((current) =>
         current.map((c) =>
           c._id === chatId && c.latestMessage && c.latestMessage._id === messageId
@@ -252,7 +265,21 @@ const ChatProvider = ({ children }) => {
     });
 
     client.on("chat:updated", (chat) => upsertChat(chat));
-    client.on("chat:removed", ({ chatId }) => removeChat(chatId));
+    client.on("chat:removed", ({ chatId }) => {
+      const chat = chatsRef.current.find((c) => c._id === chatId);
+      if (chat && !expectedRemovals.current.has(chatId)) {
+        toastRef.current({
+          title: `You're no longer in “${chat.chatName}”`,
+          description: "You were removed, or the group was deleted.",
+          status: "info",
+          duration: 5000,
+          isClosable: true,
+          position: "top",
+        });
+      }
+      expectedRemovals.current.delete(chatId);
+      removeChat(chatId);
+    });
 
     setSocket(client);
 
@@ -305,6 +332,7 @@ const ChatProvider = ({ children }) => {
         connected,
         totalUnread,
         composerRef,
+        expectRemoval: (chatId) => expectedRemovals.current.add(chatId),
       }}
     >
       {children}

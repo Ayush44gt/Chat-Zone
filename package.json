@@ -1,29 +1,15 @@
 {
-  "name": "chat-app",
+  "name": "chatzone",
   "version": "1.0.0",
-  "description": "",
-  "main": "server.js",
+  "private": true,
+  "description": "Convenience scripts; the backend and frontend each have their own package.json",
   "scripts": {
-    "start": "node backend/server.js",
-    "server": "nodemon backend/server.js",
-    "seed": "node backend/seed/seed.js",
-    "build": "npm install --legacy-peer-deps && npm install --legacy-peer-deps --prefix frontend && npm run build --prefix frontend"
+    "start": "npm start --prefix backend",
+    "server": "npm run server --prefix backend",
+    "seed": "npm run seed --prefix backend",
+    "install:all": "npm install --legacy-peer-deps --prefix backend && npm install --legacy-peer-deps --prefix frontend",
+    "build": "npm run install:all && npm run build --prefix frontend"
   },
-  "keywords": [
-    "mern",
-    "Chat-App"
-  ],
   "author": "Ayush Garg",
-  "license": "ISC",
-  "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "colors": "^1.4.0",
-    "dotenv": "^9.0.2",
-    "express": "^4.17.1",
-    "express-async-handler": "^1.1.4",
-    "jsonwebtoken": "^8.5.1",
-    "mongoose": "^5.13.23",
-    "nodemon": "^2.0.7",
-    "socket.io": "^4.8.1"
-  }
+  "license": "ISC"
 }

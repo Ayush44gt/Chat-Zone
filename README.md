@@ -82,14 +82,17 @@ chatzone/
 │   ├── utils/saveAvatar.js      # stores profile pictures in backend/uploads
 │   ├── seed/seed.js             # demo data
 │   ├── socket.js       # Socket.IO server: auth, presence, typing
-│   └── server.js       # Express app
-└── frontend/
-    ├── src/Pages/      # Home (auth) and Chat
-    ├── src/components/ # Sidebar, ChatWindow, MessageList, Composer, dialogs
-    ├── src/Context/    # session, chat list and socket state
-    ├── src/utils/      # chat and time helpers
-    ├── src/api.js      # axios instance
-    └── src/theme.js    # Chakra theme and colour tokens
+│   ├── server.js       # Express app
+│   └── package.json    # backend dependencies
+├── frontend/
+│   ├── src/Pages/      # Home (auth) and Chat
+│   ├── src/components/ # Sidebar, ChatWindow, MessageList, Composer, dialogs
+│   ├── src/Context/    # session, chat list and socket state
+│   ├── src/utils/      # chat and time helpers
+│   ├── src/api.js      # axios instance
+│   ├── src/theme.js    # Chakra theme and colour tokens
+│   └── package.json    # frontend dependencies
+└── package.json        # scripts only: start, server, seed, build
 ```
 
 ### Data model
@@ -165,9 +168,12 @@ Connect with `io(url, { auth: { token } })`.
 ```bash
 git clone https://github.com/Ayush44gt/Chat-Zone.git
 cd Chat-Zone
-npm install --legacy-peer-deps
-npm install --legacy-peer-deps --prefix frontend
+npm run install:all   # installs backend/ and frontend/ dependencies
 ```
+
+The backend and the frontend each have their own `package.json` and
+`node_modules`. The root `package.json` has no dependencies; it only holds the
+scripts below, which forward to the right folder.
 
 Create `backend/.env` from the template and set a `JWT_SECRET`:
 

@@ -76,6 +76,13 @@ const Header = ({ chat, typists, onBack, onInfo }) => {
   const other = getOtherUser(user, chat);
   const online = Boolean(other) && isOnline(other._id);
 
+  // Re-render every minute so "last seen 5 min ago" stays true
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => setTick((n) => n + 1), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
   let subtitle;
   let subtitleColor = ui.muted;
   if (typists.length > 0) {
@@ -183,20 +190,30 @@ const Conversation = ({ chat }) => {
     el.scrollTo({ top: el.scrollHeight, behavior: smooth ? "smooth" : "auto" });
   }, []);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setLoadError("");
-    try {
-      const { data } = await api.get(`/message/${chatId}`);
-      stick.current = true;
-      setMessages(data.messages);
-      setHasMore(data.hasMore);
-    } catch (error) {
-      setLoadError(errorMessage(error, "Failed to load the messages"));
-    } finally {
-      setLoading(false);
-    }
-  }, [chatId]);
+  // A refresh keeps the current view on screen and anything not sent yet
+  const load = useCallback(
+    async ({ refresh } = {}) => {
+      if (!refresh) {
+        setLoading(true);
+        setLoadError("");
+      }
+      try {
+        const { data } = await api.get(`/message/${chatId}`);
+        if (!refresh) stick.current = true;
+        setMessages((current) => [
+          ...data.messages,
+          ...current.filter((m) => m.pending || m.failed),
+        ]);
+        setHasMore(data.hasMore);
+        setLoadError("");
+      } catch (error) {
+        if (!refresh) setLoadError(errorMessage(error, "Failed to load the messages"));
+      } finally {
+        setLoading(false);
+      }
+    },
+    [chatId]
+  );
 
   useEffect(() => {
     load();
@@ -299,7 +316,7 @@ const Conversation = ({ chat }) => {
     };
 
     // Anything sent while the connection was down is fetched again
-    const onReconnect = () => load();
+    const onReconnect = () => load({ refresh: true });
 
     socket.on("message:new", onNew);
     socket.on("message:deleted", onDeleted);
@@ -393,7 +410,7 @@ const Conversation = ({ chat }) => {
   let body;
   if (loading) {
     body = <MessagesSkeleton />;
-  } else if (loadError) {
+  } else if (loadError && messages.length === 0) {
     body = (
       <Flex direction="column" align="center" justify="center" h="100%" textAlign="center" px={6}>
         <AlertIcon boxSize={8} color="red.400" mb={3} />
@@ -403,7 +420,7 @@ const Conversation = ({ chat }) => {
         <Text fontSize="sm" color={ui.muted} mb={4}>
           {loadError}
         </Text>
-        <Button size="sm" variant="outline" onClick={load}>
+        <Button size="sm" variant="outline" onClick={() => load()}>
           Try again
         </Button>
       </Flex>
